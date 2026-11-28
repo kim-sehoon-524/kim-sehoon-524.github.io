@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>스마트 복리 &amp; 구독 절약 계산기 · Smart Compound &amp; Subscription Saver</title>
+  <meta name="description" content="불필요한 월 구독료를 줄여 복리로 투자했을 때 5년·10년·20년 뒤 모이는 금액을 한국어·일본어·영어로 즉시 계산합니다." />
+  <link rel="canonical" href="https://kim-sehoon-524.github.io/calculator.html" />
+  <style>
+    :root { --bg:#090d16; --panel:#121a2b; --line:#263552; --text:#f1f5f9; --muted:#94a3b8; --accent:#34d399; --gold:#fde047; }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Apple SD Gothic Neo', 'Hiragino Sans', sans-serif; background: var(--bg); color: var(--text); padding: 24px 16px 60px; }
+    .wrap { max-width: 720px; margin: 0 auto; }
+    .top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 18px; }
+    .top a { color: #94a3b8; text-decoration: none; font-size: 14px; }
+    .card { background: var(--panel); border: 1px solid var(--line); border-radius: 18px; padding: 26px; margin-bottom: 18px; }
+    h1 { margin: 0 0 8px; font-size: 24px; color: var(--gold); }
+    p.desc { margin: 0 0 20px; color: var(--muted); font-size: 14px; }
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; }
+    label { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: #cbd5e1; }
+    input, select { padding: 11px 12px; border-radius: 10px; border: 1px solid var(--line); background: #0b1120; color: var(--text); font-size: 15px; }
+    .result-box { margin-top: 20px; padding: 18px; border-radius: 14px; background: rgba(52,211,153,0.1); border: 1px solid rgba(52,211,153,0.35); }
+    .result-box strong { display: block; font-size: 26px; color: var(--accent); margin-top: 4px; }
+    .sub-row { display: flex; justify-content: space-between; font-size: 13.5px; color: var(--muted); margin-top: 8px; }
+    .promo { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px; }
+    .btn { background: #3b82f6; color: #fff; text-decoration: none; padding: 11px 18px; border-radius: 10px; font-weight: 700; font-size: 14px; }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <a href="index.html">← 홈으로 돌아가기</a>
+      <select id="currency" aria-label="통화 선택">
+        <option value="KRW">₩ 원화 (KRW)</option>
+        <option value="JPY">¥ 엔화 (JPY)</option>
+        <option value="USD">$ 달러 (USD)</option>
+      </select>
+    </div>
+
+    <section class="card">
+      <h1>💰 스마트 복리 &amp; 구독 절약 계산기</h1>
+      <p class="desc">초기 자금 + 월 적립금 + 해지한 구독료 절약분을 합산해 복리 수익을 실시간으로 시뮬레이션합니다. (iOS 전용 앱 출시 준비 중 · 6개국 공개 예정)</p>
+      <div class="form-grid">
+        <label>초기 투자금<input id="principal" type="number" min="0" value="1000000" /></label>
+        <label>월 정기 적립금<input id="monthly" type="number" min="0" value="300000" /></label>
+        <label>월 구독료 절약 추가분<input id="subSaved" type="number" min="0" value="35000" /></label>
+        <label>연 기대 수익률 (%)<input id="rate" type="number" min="0" max="50" step="0.1" value="8.0" /></label>
+        <label>투자 기간 (년)<input id="years" type="number" min="1" max="50" value="10" /></label>
+      </div>
+
+      <div class="result-box">
+        <span>예상 최종 자산</span>
+        <strong id="finalAmount">-</strong>
+        <div class="sub-row"><span>총 원금 합계</span><span id="totalPrincipal">-</span></div>
+        <div class="sub-row"><span>구독 절약분만으로 불어난 금액</span><span id="subGain">-</span></div>
+      </div>
+    </section>
+
+    <section class="card promo">
+      <div>
+        <strong>⚗️ 잠깐 머리 식힐 땐? 『연금술 디펜스』</strong>
+        <div style="font-size:13px;color:#94a3b8;margin-top:4px">1,000가지 원소 타워 조합 전략 디펜스 — 지금 App Store 무료 출시 중</div>
+      </div>
+      <a class="btn" href="https://apps.apple.com/app/id6837288496" target="_blank" rel="noopener">App Store에서 보기</a>
+    </section>
+  </div>
+
+  <script>
+    const DEFAULTS = {
+      KRW: { p: 1000000, m: 300000, s: 35000, sym: '₩' },
+      JPY: { p: 100000, m: 30000, s: 3500, sym: 'JP¥' },
+      USD: { p: 1000, m: 300, s: 35, sym: '$' }
+    };
+    function fv(p, monthlyTotal, annualRatePct, years) {
+      const r = (annualRatePct / 100) / 12;
+      const n = years * 12;
+      if (r === 0) return p + monthlyTotal * n;
+      return p * Math.pow(1 + r, n) + monthlyTotal * ((Math.pow(1 + r, n) - 1) / r);
+    }
+    function fmt(val, cur) {
+      const n = cur === 'USD' ? Number(val).toFixed(2) : Math.round(val);
+      return DEFAULTS[cur].sym + Number(n).toLocaleString();
+    }
+    function calc() {
+      const cur = document.getElementById('currency').value;
+      const p = Math.max(0, Number(document.getElementById('principal').value) || 0);
+      const m = Math.max(0, Number(document.getElementById('monthly').value) || 0);
+      const s = Math.max(0, Number(document.getElementById('subSaved').value) || 0);
+      const rate = Math.max(0, Number(document.getElementById('rate').value) || 0);
+      const years = Math.min(60, Math.max(1, Number(document.getElementById('years').value) || 1));
+      const total = fv(p, m + s, rate, years);
+      const subOnly = fv(0, s, rate, years);
+      const principalSum = p + (m + s) * years * 12;
+      document.getElementById('finalAmount').textContent = fmt(total, cur);
+      document.getElementById('totalPrincipal').textContent = fmt(principalSum, cur);
+      document.getElementById('subGain').textContent = fmt(subOnly, cur);
+    }
+    document.getElementById('currency').addEventListener('change', (e) => {
+      const d = DEFAULTS[e.target.value];
+      document.getElementById('principal').value = d.p;
+      document.getElementById('monthly').value = d.m;
+      document.getElementById('subSaved').value = d.s;
+      calc();
+    });
+    ['principal', 'monthly', 'subSaved', 'rate', 'years'].forEach((id) => document.getElementById(id).addEventListener('input', calc));
+    calc();
+  </script>
+</body>
+</html>
